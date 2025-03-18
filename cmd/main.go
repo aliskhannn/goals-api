@@ -6,6 +6,8 @@ import (
 	"github.com/aliskhanx/goals-api/internal/handler"
 	"github.com/aliskhanx/goals-api/internal/repository"
 	"github.com/aliskhanx/goals-api/internal/service"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"log"
 	"net/http"
 	"os"
@@ -38,14 +40,16 @@ func main() {
 
 	h := handler.NewHandler(goalService)
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Goals API is running!")
-	})
-	mux.HandleFunc("/goals", h.HandleCreateGoal)
+	r.Post("/goals", h.HandleCreateGoal)
+	r.Get("/goals", h.HandleGetAllGoals)
+	r.Get("/goals/{id}", h.HandleGetGoalByID)
+	r.Put("/goals/{id}", h.HandleUpdateGoal)
+	r.Delete("/goals/{id}", h.HandleDeleteGoal)
 
 	port := ":8080"
 	log.Println("Server running on port", port)
-	log.Fatalf("Error starting server: %v", http.ListenAndServe(port, mux))
+	log.Fatalf("Error starting server: %v", http.ListenAndServe(port, r))
 }
