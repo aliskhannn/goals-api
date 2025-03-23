@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/aliskhanx/goals-api/internal/handler"
-	"github.com/aliskhanx/goals-api/internal/repository"
-	"github.com/aliskhanx/goals-api/internal/service"
+	"github.com/aliskhannn/goals-api/internal/handler"
+	"github.com/aliskhannn/goals-api/internal/repository"
+	"github.com/aliskhannn/goals-api/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"os"
@@ -17,10 +18,12 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	logger := logrus.New()
+	logger.SetFormatter(&logrus.JSONFormatter{})
 
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
@@ -31,14 +34,15 @@ func main() {
 
 	dbpool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		logger.Fatalf("Error connecting to database: %v", err)
 	}
 	defer dbpool.Close()
 
 	repo := repository.NewRepository(dbpool)
 	goalService := service.NewGoalService(repo)
+	userService := service.NewUserService(repo)
 
-	h := handler.NewHandler(goalService)
+	h := handler.NewHandler(goalService, userService)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -49,7 +53,10 @@ func main() {
 	r.Put("/goals/{id}", h.HandleUpdateGoal)
 	r.Delete("/goals/{id}", h.HandleDeleteGoal)
 
+	r.Post("/register", h.HandleRegister)
+	r.Post("/login", h.HandleLogin)
+
 	port := ":8080"
-	log.Println("Server running on port", port)
-	log.Fatalf("Error starting server: %v", http.ListenAndServe(port, r))
+	logger.Println("Server running on port", port)
+	logger.Fatalf("Error starting server: %v", http.ListenAndServe(port, r))
 }
