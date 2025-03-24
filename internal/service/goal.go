@@ -6,7 +6,7 @@ import (
 )
 
 type GoalRepository interface {
-	CreateGoal(ctx context.Context, goal *model.Goal) error
+	CreateGoal(ctx context.Context, goal *model.Goal, userID int) error
 	GetAllGoals(ctx context.Context) ([]*model.Goal, error)
 	GetGoalById(ctx context.Context, id int) (*model.Goal, error)
 	UpdateGoal(ctx context.Context, goal *model.Goal, id int) error
@@ -23,8 +23,8 @@ func NewGoalService(repo GoalRepository) *GoalService {
 	}
 }
 
-func (s *GoalService) CreateGoal(ctx context.Context, goal *model.Goal) error {
-	return s.repo.CreateGoal(ctx, goal)
+func (s *GoalService) CreateGoal(ctx context.Context, goal *model.Goal, userID int) error {
+	return s.repo.CreateGoal(ctx, goal, userID)
 }
 
 func (s *GoalService) GetAllGoals(ctx context.Context) ([]*model.Goal, error) {

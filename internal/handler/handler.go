@@ -30,6 +30,12 @@ func (h *Handler) HandleCreateGoal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, ok := r.Context().Value("userId").(int)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var goal model.Goal
 	err := json.NewDecoder(r.Body).Decode(&goal)
 	if err != nil {
@@ -42,7 +48,7 @@ func (h *Handler) HandleCreateGoal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.goalService.CreateGoal(r.Context(), &goal)
+	err = h.goalService.CreateGoal(r.Context(), &goal, userID)
 	if err != nil {
 		http.Error(w, "Error creating goal", http.StatusInternalServerError)
 		return
@@ -189,17 +195,13 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//if err = validate.Struct(user); err != nil {
-	//	http.Error(w, "Validation failed: "+err.Error(), http.StatusBadRequest)
-	//	return
-	//}
-
 	token, err := h.userService.Login(r.Context(), user.Username, user.Password)
 	if err != nil {
-		http.Error(w, "Error logging in"+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error logging in "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }

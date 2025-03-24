@@ -6,10 +6,10 @@ import (
 	"github.com/aliskhannn/goals-api/internal/model"
 )
 
-func (r *Repository) CreateGoal(ctx context.Context, goal *model.Goal) error {
-	query := `INSERT INTO goals (title, description, completed) VALUES ($1, $2, $3)`
+func (r *Repository) CreateGoal(ctx context.Context, goal *model.Goal, userID int) error {
+	query := `INSERT INTO goals (title, description, completed, user_id) VALUES ($1, $2, $3, $4)`
 
-	_, err := r.pool.Exec(ctx, query, goal.Title, goal.Description, goal.Completed)
+	_, err := r.pool.Exec(ctx, query, goal.Title, goal.Description, goal.Completed, userID)
 	if err != nil {
 		return fmt.Errorf("error creating goal: %w", err)
 	}

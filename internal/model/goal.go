@@ -5,4 +5,5 @@ type Goal struct {
 	Title       string `json:"title" validate:"required,max=255"`
 	Description string `json:"description" validate:"required"`
 	Completed   bool   `json:"completed"`
+	UserID      int    `json:"user_id"`
 }
